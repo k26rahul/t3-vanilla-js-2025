@@ -4,8 +4,8 @@ export default class T3GameEngine {
   constructor(config = {}) {
     this.initializeConfig(config);
     this.state = {};
-    this.stateUndoStack = [];
-    this.stateRedoStack = [];
+    this.moveUndoStack = [];
+    this.moveRedoStack = [];
     this.resetState();
     this.resetScores();
   }
@@ -32,8 +32,8 @@ export default class T3GameEngine {
       winningCombination: null,
       isGameOver: false,
     });
-    this.stateUndoStack = [];
-    this.stateRedoStack = [];
+    this.moveUndoStack = [];
+    this.moveRedoStack = [];
   }
 
   resetScores(scores = { x: 0, o: 0, draw: 0 }) {
@@ -42,25 +42,33 @@ export default class T3GameEngine {
 
   makeMove(index) {
     if (!this.isMoveAvailable(index)) return null;
-    this.stateUndoStack.push(structuredClone(this.state));
+    this.moveUndoStack.push({ index, player: this.state.currentPlayer });
     this.state.board[index] = this.state.currentPlayer;
-    this.stateRedoStack = [];
+    this.moveRedoStack = [];
     this.handleMoveOutcome();
     return this.state;
   }
 
   undoMove() {
-    if (this.stateUndoStack.length === 0) return null;
-    this.stateRedoStack.push(structuredClone(this.state));
-    this.state = this.stateUndoStack.pop();
-    return this.state;
+    if (this.moveUndoStack.length === 0) return null;
+    const lastMove = this.moveUndoStack.pop();
+    this.moveRedoStack.push(lastMove);
+    this.state.board[lastMove.index] = null;
+    this.state.currentPlayer = lastMove.player;
+    this.state.isGameOver = false;
+    this.state.winner = null;
+    this.state.winningCombination = null;
+    return lastMove;
   }
 
   redoMove() {
-    if (this.stateRedoStack.length === 0) return null;
-    this.stateUndoStack.push(structuredClone(this.state));
-    this.state = this.stateRedoStack.pop();
-    return this.state;
+    if (this.moveRedoStack.length === 0) return null;
+    const lastMove = this.moveRedoStack.pop();
+    this.moveUndoStack.push(lastMove);
+    this.state.board[lastMove.index] = lastMove.player;
+    this.state.currentPlayer = lastMove.player;
+    this.handleMoveOutcome();
+    return lastMove;
   }
 
   handleMoveOutcome() {
@@ -127,8 +135,8 @@ export default class T3GameEngine {
     return JSON.stringify({
       config: this.config,
       state: this.state,
-      stateUndoStack: this.stateUndoStack,
-      stateRedoStack: this.stateRedoStack,
+      moveUndoStack: this.moveUndoStack,
+      moveRedoStack: this.moveRedoStack,
     });
   }
 
@@ -136,7 +144,7 @@ export default class T3GameEngine {
     const data = JSON.parse(serializedData);
     this.config = data.config;
     this.state = data.state;
-    this.stateUndoStack = data.stateUndoStack;
-    this.stateRedoStack = data.stateRedoStack;
+    this.moveUndoStack = data.moveUndoStack;
+    this.moveRedoStack = data.moveRedoStack;
   }
 }

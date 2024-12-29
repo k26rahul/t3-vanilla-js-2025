@@ -19,6 +19,7 @@ const $buttonRedo = document.getElementById('redo');
 
 export function initializeGame() {
   const t3GameEngine = new T3GameEngine();
+  window.t3GameEngine = t3GameEngine;
   setEngineContext(t3GameEngine);
   resetGame();
 }
@@ -64,19 +65,46 @@ export function handleCellClick(event) {
     }
     return;
   }
+  makeMove(index, event.target);
+}
+
+function makeMove(index, cell) {
   const currentPlayer = t3GameEngine.state.currentPlayer;
   t3GameEngine.makeMove(index);
   appState.gameStatus = 'progressing';
-  updateCell(event.target, currentPlayer);
+  fillCell(cell, currentPlayer);
   updateStatusDisplay();
   handleGameOver();
 }
 
-function updateCell(cell, currentPlayer) {
+function undoMove(index) {
+  const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
+  unfillCell(cell);
+  updateStatusDisplay();
+  handleUndoGameOver();
+}
+
+function redoMove(index) {
+  const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
+  const currentPlayer = t3GameEngine.state.currentPlayer;
+  fillCell(cell, currentPlayer);
+  updateStatusDisplay();
+  handleGameOver();
+}
+
+function fillCell(cell, currentPlayer) {
   cell.classList.add('filled');
   const span = cell.querySelector('span');
   span.textContent = getPlayerSymbol(currentPlayer);
-  applyAndRemoveAnimationClasses(span, 'animated', 'bounceIn');
+  applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
+}
+
+function unfillCell(cell) {
+  const span = cell.querySelector('span');
+  applyAndRemoveAnimationClasses(span, ['animated', 'bounceOut'], () => {
+    cell.classList.remove('filled');
+    span.textContent = '';
+  });
 }
 
 export function updateStatusDisplay() {
@@ -98,12 +126,26 @@ function handleGameOver() {
         const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
         cell.classList.add('winning');
         const span = cell.querySelector('span');
-        applyAndRemoveAnimationClasses(span, 'animated', 'bounceIn');
+        applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
       });
     }
     updateScoresDisplay();
     $t3Grid.classList.add('game-over');
     appState.gameStatus = 'gameOver';
+  }
+}
+
+function handleUndoGameOver() {
+  if (!t3GameEngine.state.isGameOver) {
+    $t3Grid.classList.remove('game-over');
+    document.querySelectorAll('.winning').forEach(cell => {
+      cell.classList.remove('winning');
+      const span = cell.querySelector('span');
+      applyAndRemoveAnimationClasses(span, ['animated', 'bounceOut'], () => {
+        applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
+      });
+    });
+    appState.gameStatus = 'progressing';
   }
 }
 
@@ -182,11 +224,17 @@ export function initializeControls() {
   });
 
   $buttonUndo.addEventListener('click', () => {
-    t3GameEngine.undoMove();
+    const lastMove = t3GameEngine.undoMove();
+    if (lastMove) {
+      undoMove(lastMove.index);
+    }
   });
 
   $buttonRedo.addEventListener('click', () => {
-    t3GameEngine.redoMove();
+    const lastMove = t3GameEngine.redoMove();
+    if (lastMove) {
+      redoMove(lastMove.index);
+    }
   });
 }
 
