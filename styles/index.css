@@ -1,0 +1,221 @@
+@import url('./animations.css');
+
+:root {
+  --t3-grid-bg: #eee;
+  --t3-cell-bg: white;
+  --clear-score-bg: crimson;
+  --reset-board-bg: seagreen;
+  --undo-redo-bg: darkblue;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', Arial, Helvetica, sans-serif;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+button iconify-icon {
+  margin-right: 0.5rem;
+}
+
+select {
+  outline: none;
+  padding: 10px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+select:focus {
+  border-color: #007bff;
+}
+
+.gradient-box-shadow {
+  background: linear-gradient(135deg, #f4f4f4, #e0e0e0);
+  box-shadow: inset 1px 1px 2px #bbb, inset -2px -2px 2px #fff, 2px 4px 4px #ccc;
+}
+
+iconify-icon {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+/* ================
+header, main
+ */
+
+header {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+main {
+  place-items: center;
+  padding: 0 1rem;
+  padding-bottom: 1rem;
+}
+
+main section {
+  margin-bottom: 1rem;
+}
+
+/* ================
+t3 grid, cells
+ */
+
+.t3-grid {
+  display: grid;
+  gap: 0.25rem;
+  background-color: var(--t3-grid-bg);
+  margin-bottom: 2rem;
+}
+
+.t3-grid-3x3 {
+  grid-template-rows: repeat(3, 6rem);
+  grid-template-columns: repeat(3, 6rem);
+}
+
+.t3-grid-4x4 {
+  grid-template-rows: repeat(4, 6rem);
+  grid-template-columns: repeat(4, 6rem);
+}
+
+.t3-grid-5x5 {
+  grid-template-rows: repeat(5, 6rem);
+  grid-template-columns: repeat(5, 6rem);
+}
+
+.t3-grid-6x6 {
+  grid-template-rows: repeat(6, 6rem);
+  grid-template-columns: repeat(6, 6rem);
+}
+
+.t3-grid-7x7 {
+  grid-template-rows: repeat(7, 6rem);
+  grid-template-columns: repeat(7, 6rem);
+}
+
+.t3-grid-8x8 {
+  grid-template-rows: repeat(8, 6rem);
+  grid-template-columns: repeat(8, 6rem);
+}
+
+.t3-grid-9x9 {
+  grid-template-rows: repeat(9, 6rem);
+  grid-template-columns: repeat(9, 6rem);
+}
+
+.t3-cell-wrapper {
+  padding: 0.25rem;
+  background-color: var(--t3-cell-bg);
+}
+
+.t3-cell {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  background-color: inherit;
+  transition: background-color 0.3s ease;
+}
+
+.t3-cell.filled {
+  cursor: not-allowed;
+}
+
+.t3-grid.game-over .t3-cell {
+  cursor: initial;
+}
+
+.t3-cell:not(.filled):hover {
+  background-color: var(--t3-grid-bg);
+}
+
+.t3-cell.winning {
+  font-size: 2.5rem;
+}
+
+.t3-grid.game-over .t3-cell:not(.winning) {
+  opacity: 0.5;
+}
+
+/* ================
+score, status display
+ */
+
+.score-display {
+  display: flex;
+  gap: 5rem;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 5px;
+}
+
+.score-key {
+  font-size: 1.25rem;
+}
+
+.status-display {
+  margin-bottom: 2rem;
+}
+
+/* ================
+game controls
+ */
+
+.game-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 5px;
+}
+
+.game-controls .btn-container {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.game-controls button {
+  padding: 0.5rem;
+  border-radius: 5px;
+  color: white;
+  box-shadow: 5px 5px 10px #979797;
+}
+
+#clear-score {
+  background-color: var(--clear-score-bg);
+}
+#reset-board {
+  background-color: var(--reset-board-bg);
+}
+
+#undo,
+#redo {
+  background-color: var(--undo-redo-bg);
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.control-group select {
+  min-width: 100%;
+}

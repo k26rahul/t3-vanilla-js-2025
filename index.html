@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="T3 Vanilla Js" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>T3 Vanilla Js</title>
+
+    <link rel="stylesheet" href="./styles/index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+    <link rel="icon" href="./assets/favicon.png" />
+
+    <script type="module" src="./scripts/main.js" defer></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/iconify-icon@2.2.0/dist/iconify-icon.min.js"
+      async
+    ></script>
+  </head>
+  <body>
+    <header>
+      <h1>T3 Vanilla Js</h1>
+    </header>
+
+    <main>
+      <section class="score-display gradient-box-shadow">
+        <div class="score-item">
+          <div class="score-key">✖️</div>
+          <div class="score-value" data-score-x>_</div>
+        </div>
+
+        <div class="score-item">
+          <div class="score-key">Draw</div>
+          <div class="score-value" data-score-draw>_</div>
+        </div>
+
+        <div class="score-item">
+          <div class="score-key">⭕</div>
+          <div class="score-value" data-score-o>_</div>
+        </div>
+      </section>
+
+      <section class="status-display">✖️'s Turn</section>
+
+      <section class="t3-grid t3-grid-3x3">
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="0"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="1"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="2"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="3"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="4"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="5"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="6"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="7"><span></span></button>
+        </div>
+        <div class="t3-cell-wrapper">
+          <button class="t3-cell" data-cell="8"><span></span></button>
+        </div>
+      </section>
+
+      <section class="game-controls gradient-box-shadow">
+        <div class="btn-container">
+          <button id="clear-score">
+            <iconify-icon icon="ic:baseline-delete" width="1.5em" height="1.5em"></iconify-icon>
+            Clear Score
+          </button>
+
+          <button id="reset-board">
+            <iconify-icon
+              icon="ic:baseline-restart-alt"
+              width="1.5em"
+              height="1.5em"
+            ></iconify-icon>
+            Reset Board
+          </button>
+
+          <button id="undo">
+            <iconify-icon icon="ic:baseline-undo" width="1.5em" height="1.5em"></iconify-icon>
+            Undo
+          </button>
+
+          <button id="redo">
+            <iconify-icon icon="ic:baseline-redo" width="1.5em" height="1.5em"></iconify-icon>
+            Redo
+          </button>
+        </div>
+
+        <div class="control-group">
+          <label for="board-size">Board Size:</label>
+          <select id="board-size">
+            <option value="3">3x3</option>
+            <option value="4">4x4</option>
+            <option value="5">5x5</option>
+            <option value="6">6x6</option>
+            <option value="7">7x7</option>
+            <option value="8">8x8</option>
+            <option value="9">9x9</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="match-size">Match Size:</label>
+          <select id="match-size">
+            <option value="3">3</option>
+            <option value="4" disabled>4 (not available)</option>
+            <option value="5" disabled>5 (not available)</option>
+            <option value="6" disabled>6 (not available)</option>
+            <option value="7" disabled>7 (not available)</option>
+            <option value="8" disabled>8 (not available)</option>
+            <option value="9" disabled>9 (not available)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="game-mode">Game Mode:</label>
+          <select id="game-mode">
+            <option value="single">Single Player (vs AI)</option>
+            <option value="two">Two Players</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="ai-difficulty">AI Difficulty:</label>
+          <select id="ai-difficulty">
+            <option value="dumb">Dumb</option>
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+            <option value="impossible">Impossible</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="ai-plays-as">AI Plays As:</label>
+          <select id="ai-plays-as">
+            <option value="x">✖️</option>
+            <option value="o">⭕</option>
+          </select>
+        </div>
+      </section>
+    </main>
+
+    <footer></footer>
+  </body>
+</html>
