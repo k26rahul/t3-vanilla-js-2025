@@ -2,19 +2,26 @@ import { checkWin } from './utils.js';
 
 export default class T3GameEngine {
   constructor(config = {}) {
-    this.config = {
-      boardSize: config.boardSize ?? 3,
-      matchSize: config.matchSize ?? (config.boardSize >= 4 ? 4 : 3),
-    };
-    const validation = this.validateBoardAndMatchSize(this.config.boardSize, this.config.matchSize);
-    if (!validation.ok) {
-      throw new Error(validation.message);
-    }
+    this.initializeConfig(config);
     this.state = {};
     this.stateUndoStack = [];
     this.stateRedoStack = [];
     this.resetState();
     this.resetScores();
+  }
+
+  initializeConfig(config) {
+    this.config = {
+      boardSize: config.boardSize ?? 3,
+      matchSize: config.matchSize ?? (config.boardSize >= 4 ? 4 : 3),
+    };
+    const { ok, message } = this.validateBoardAndMatchSize(
+      this.config.boardSize,
+      this.config.matchSize
+    );
+    if (!ok) {
+      throw new Error(message);
+    }
   }
 
   resetState() {
