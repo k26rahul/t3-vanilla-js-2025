@@ -25,7 +25,6 @@ export function initializeGame() {
 }
 
 export function resetGame() {
-  appState.gameStatus = 'initial';
   t3GameEngine.resetState();
   buildBoard();
   updateStatusDisplay();
@@ -71,7 +70,6 @@ export function handleCellClick(event) {
 function makeMove(index, cell) {
   const currentPlayer = t3GameEngine.state.currentPlayer;
   t3GameEngine.makeMove(index);
-  appState.gameStatus = 'progressing';
   fillCell(cell, currentPlayer);
   updateStatusDisplay();
   handleGameOver();
@@ -84,18 +82,17 @@ function undoMove(index) {
   handleUndoGameOver();
 }
 
-function redoMove(index) {
+function redoMove(index, player) {
   const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
-  const currentPlayer = t3GameEngine.state.currentPlayer;
-  fillCell(cell, currentPlayer);
+  fillCell(cell, player);
   updateStatusDisplay();
   handleGameOver();
 }
 
-function fillCell(cell, currentPlayer) {
+function fillCell(cell, player) {
   cell.classList.add('filled');
   const span = cell.querySelector('span');
-  span.textContent = getPlayerSymbol(currentPlayer);
+  span.textContent = getPlayerSymbol(player);
   applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
 }
 
@@ -131,7 +128,6 @@ function handleGameOver() {
     }
     updateScoresDisplay();
     $t3Grid.classList.add('game-over');
-    appState.gameStatus = 'gameOver';
   }
 }
 
@@ -145,7 +141,6 @@ function handleUndoGameOver() {
         applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
       });
     });
-    appState.gameStatus = 'progressing';
   }
 }
 
@@ -160,82 +155,96 @@ export function getPlayerSymbol(player) {
   return player === 'x' ? '✖️' : '⭕';
 }
 
-export function initializeControls() {
+export function initializeGameControls() {
   updateMatchSizeOptions(t3GameEngine.config.boardSize);
 
-  $selectBoardSize.addEventListener('change', event => {
-    if (
-      appState.gameStatus === 'progressing' &&
-      !confirm('Are you sure you want to reset the game?')
-    ) {
-      return;
-    }
-    const boardSize = parseInt(event.target.value);
-    updateMatchSizeOptions(boardSize);
-    resetGame();
-  });
+  $selectBoardSize.addEventListener('change', handleBoardSizeChange);
+  $selectMatchSize.addEventListener('change', handleMatchSizeChange);
+  $selectGameMode.addEventListener('change', handleGameModeChange);
+  $selectAiDifficulty.addEventListener('change', handleAiDifficultyChange);
+  $selectAiPlaysAs.addEventListener('change', handleAiPlaysAsChange);
+  $buttonClearScore.addEventListener('click', handleClearScoreClick);
+  $buttonResetBoard.addEventListener('click', handleResetBoardClick);
+  $buttonUndo.addEventListener('click', handleUndoClick);
+  $buttonRedo.addEventListener('click', handleRedoClick);
+}
 
-  $selectMatchSize.addEventListener('change', event => {
-    if (
-      appState.gameStatus === 'progressing' &&
-      !confirm('Are you sure you want to reset the game?')
-    ) {
-      return;
-    }
-    const matchSize = parseInt(event.target.value);
-    t3GameEngine.updateBoardAndMatchSize(t3GameEngine.config.boardSize, matchSize);
-    resetGame();
-  });
+function handleBoardSizeChange(event) {
+  if (
+    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
+    !confirm('Are you sure you want to reset the game?')
+  ) {
+    return;
+  }
+  const boardSize = parseInt(event.target.value);
+  updateMatchSizeOptions(boardSize);
+  resetGame();
+}
 
-  $selectGameMode.addEventListener('change', event => {
-    if (
-      appState.gameStatus === 'progressing' &&
-      !confirm('Are you sure you want to reset the game?')
-    ) {
-      return;
-    }
-    appState.gameMode = event.target.value;
-    resetGame();
-  });
+function handleMatchSizeChange(event) {
+  if (
+    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
+    !confirm('Are you sure you want to reset the game?')
+  ) {
+    return;
+  }
+  const matchSize = parseInt(event.target.value);
+  t3GameEngine.updateBoardAndMatchSize(t3GameEngine.config.boardSize, matchSize);
+  resetGame();
+}
 
-  $selectAiDifficulty.addEventListener('change', event => {
-    appState.aiDifficulty = event.target.value;
-  });
+function handleGameModeChange(event) {
+  if (
+    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
+    !confirm('Are you sure you want to reset the game?')
+  ) {
+    return;
+  }
+  appState.gameMode = event.target.value;
+  resetGame();
+}
 
-  $selectAiPlaysAs.addEventListener('change', event => {
-    appState.aiPlaysAs = event.target.value;
-  });
+function handleAiDifficultyChange(event) {
+  appState.aiDifficulty = event.target.value;
+}
 
-  $buttonClearScore.addEventListener('click', () => {
-    if (confirm('Are you sure you want to reset the scores?')) {
-      t3GameEngine.resetScores();
+function handleAiPlaysAsChange(event) {
+  appState.aiPlaysAs = event.target.value;
+}
+
+function handleClearScoreClick() {
+  if (confirm('Are you sure you want to reset the scores?')) {
+    t3GameEngine.resetScores();
+    updateScoresDisplay();
+  }
+}
+
+function handleResetBoardClick() {
+  if (
+    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
+    !confirm('Are you sure you want to reset the game?')
+  ) {
+    return;
+  }
+  resetGame();
+}
+
+function handleUndoClick() {
+  const wasGameOver = t3GameEngine.state.isGameOver;
+  const lastMove = t3GameEngine.undoMove();
+  if (lastMove) {
+    undoMove(lastMove.index);
+    if (wasGameOver) {
       updateScoresDisplay();
     }
-  });
+  }
+}
 
-  $buttonResetBoard.addEventListener('click', () => {
-    if (
-      appState.gameStatus === 'progressing' &&
-      !confirm('Are you sure you want to reset the game?')
-    ) {
-      return;
-    }
-    resetGame();
-  });
-
-  $buttonUndo.addEventListener('click', () => {
-    const lastMove = t3GameEngine.undoMove();
-    if (lastMove) {
-      undoMove(lastMove.index);
-    }
-  });
-
-  $buttonRedo.addEventListener('click', () => {
-    const lastMove = t3GameEngine.redoMove();
-    if (lastMove) {
-      redoMove(lastMove.index);
-    }
-  });
+function handleRedoClick() {
+  const lastMove = t3GameEngine.redoMove();
+  if (lastMove) {
+    redoMove(lastMove.index, lastMove.player);
+  }
 }
 
 function updateMatchSizeOptions(boardSize) {

@@ -1,5 +1,11 @@
 import { checkWin } from './utils.js';
 
+const GameStatus = {
+  INITIAL: 'INITIAL',
+  PROGRESSING: 'PROGRESSING',
+  GAME_OVER: 'GAME_OVER',
+};
+
 export default class T3GameEngine {
   constructor(config = {}) {
     this.initializeConfig(config);
@@ -31,6 +37,7 @@ export default class T3GameEngine {
       winner: null,
       winningCombination: null,
       isGameOver: false,
+      gameStatus: GameStatus.INITIAL,
     });
     this.moveUndoStack = [];
     this.moveRedoStack = [];
@@ -42,15 +49,20 @@ export default class T3GameEngine {
 
   makeMove(index) {
     if (!this.isMoveAvailable(index)) return null;
-    this.moveUndoStack.push({ index, player: this.state.currentPlayer });
     this.state.board[index] = this.state.currentPlayer;
+    this.moveUndoStack.push({ index, player: this.state.currentPlayer });
     this.moveRedoStack = [];
+    this.state.gameStatus = GameStatus.PROGRESSING;
     this.handleMoveOutcome();
     return this.state;
   }
 
   undoMove() {
     if (this.moveUndoStack.length === 0) return null;
+    if (this.state.isGameOver) {
+      if (this.state.winner) this.state.scores[this.state.winner]--;
+      else this.state.scores.draw--;
+    }
     const lastMove = this.moveUndoStack.pop();
     this.moveRedoStack.push(lastMove);
     this.state.board[lastMove.index] = null;
@@ -66,27 +78,28 @@ export default class T3GameEngine {
     const lastMove = this.moveRedoStack.pop();
     this.moveUndoStack.push(lastMove);
     this.state.board[lastMove.index] = lastMove.player;
-    this.state.currentPlayer = lastMove.player;
     this.handleMoveOutcome();
     return lastMove;
   }
 
   handleMoveOutcome() {
     const winnerResult = checkWin(this.state.board, this.config.boardSize, this.config.matchSize);
-    if (winnerResult) this.applyWinnerState(winnerResult);
-    else if (this.isBoardFull(this.state.board)) this.applyDrawState();
+    if (winnerResult) this.setWinnerState(winnerResult);
+    else if (this.isBoardFull(this.state.board)) this.setDrawState();
     else this.switchPlayer();
   }
 
-  applyWinnerState(winnerResult) {
+  setWinnerState(winnerResult) {
     this.state.winner = winnerResult.winner;
     this.state.winningCombination = winnerResult.winningCombination;
     this.state.isGameOver = true;
+    this.state.gameStatus = GameStatus.GAME_OVER;
     this.state.scores[this.state.winner]++;
   }
 
-  applyDrawState() {
+  setDrawState() {
     this.state.isGameOver = true;
+    this.state.gameStatus = GameStatus.GAME_OVER;
     this.state.scores.draw++;
   }
 
@@ -95,9 +108,6 @@ export default class T3GameEngine {
   }
 
   isMoveAvailable(index) {
-    if (index < 0 || index >= this.state.board.length) {
-      throw new Error(`Index ${index} is out of bounds for board size ${this.config.boardSize}`);
-    }
     return !this.state.isGameOver && this.state.board[index] === null;
   }
 
@@ -106,9 +116,9 @@ export default class T3GameEngine {
   }
 
   updateBoardAndMatchSize(newBoardSize, newMatchSize) {
-    const validation = this.validateBoardAndMatchSize(newBoardSize, newMatchSize);
-    if (!validation.ok) {
-      throw new Error(validation.message);
+    const { ok, message } = this.validateBoardAndMatchSize(newBoardSize, newMatchSize);
+    if (!ok) {
+      throw new Error(message);
     }
     this.config.boardSize = newBoardSize;
     this.config.matchSize = newMatchSize;
