@@ -1,73 +1,88 @@
-export function checkWin(board, boardSize, matchSize) {
-  const winningCombinations = generateWinningCombinations(boardSize, matchSize);
-  for (const combination of winningCombinations) {
-    const a = combination[0];
-    if (board[a] && combination.every(index => board[index] === board[a])) {
+export function evaluateWinner(board, boardSize, matchSize) {
+  const winningPatterns = generateWinningPatterns(boardSize, matchSize);
+  for (const pattern of winningPatterns) {
+    const a = pattern[0];
+    if (board[a] && pattern.every(index => board[index] === board[a])) {
       return {
         winner: board[a],
-        winningCombination: combination,
+        winningPattern: pattern,
       };
     }
   }
   return null;
 }
 
-const winningCombinationsCache = {};
-
-export function generateWinningCombinations(boardSize, matchSize) {
+const winningPatternsCache = {};
+export function generateWinningPatterns(boardSize, matchSize) {
   const cacheKey = `${boardSize}-${matchSize}`;
-  if (winningCombinationsCache[cacheKey]) {
-    return winningCombinationsCache[cacheKey];
+  if (winningPatternsCache[cacheKey]) {
+    return winningPatternsCache[cacheKey];
   }
 
-  const combinations = [];
+  const patterns = [];
   const size = boardSize;
   const match = matchSize;
 
   // Rows
   for (let row = 0; row < size; row++) {
     for (let col = 0; col <= size - match; col++) {
-      const combination = [];
+      const pattern = [];
       for (let k = 0; k < match; k++) {
-        combination.push(row * size + col + k);
+        pattern.push(row * size + col + k);
       }
-      combinations.push(combination);
+      patterns.push(pattern);
     }
   }
 
   // Columns
   for (let col = 0; col < size; col++) {
     for (let row = 0; row <= size - match; row++) {
-      const combination = [];
+      const pattern = [];
       for (let k = 0; k < match; k++) {
-        combination.push((row + k) * size + col);
+        pattern.push((row + k) * size + col);
       }
-      combinations.push(combination);
+      patterns.push(pattern);
     }
   }
 
   // Main diagonals (top-left to bottom-right)
   for (let row = 0; row <= size - match; row++) {
     for (let col = 0; col <= size - match; col++) {
-      const combination = [];
+      const pattern = [];
       for (let k = 0; k < match; k++) {
-        combination.push((row + k) * size + col + k);
+        pattern.push((row + k) * size + col + k);
       }
-      combinations.push(combination);
+      patterns.push(pattern);
     }
   }
 
   // Anti diagonals (top-right to bottom-left)
   for (let row = 0; row <= size - match; row++) {
     for (let col = match - 1; col < size; col++) {
-      const combination = [];
+      const pattern = [];
       for (let k = 0; k < match; k++) {
-        combination.push((row + k) * size + col - k);
+        pattern.push((row + k) * size + col - k);
       }
-      combinations.push(combination);
+      patterns.push(pattern);
     }
   }
 
-  winningCombinationsCache[cacheKey] = combinations;
-  return combinations;
+  winningPatternsCache[cacheKey] = patterns;
+  return patterns;
+}
+
+export function validateBoardAndMatchSize(boardSize, matchSize) {
+  if (boardSize < 3 || matchSize < 3) {
+    return { ok: false, message: 'Board size and match size must be at least 3.' };
+  }
+  if (matchSize > boardSize) {
+    return { ok: false, message: 'Match size cannot be greater than board size.' };
+  }
+  if (boardSize >= 4 && matchSize < 4) {
+    return {
+      ok: false,
+      message: 'For a board size of 4 or more, the match size must be at least 4.',
+    };
+  }
+  return { ok: true, message: '' };
 }

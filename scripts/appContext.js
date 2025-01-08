@@ -1,24 +1,20 @@
-export let t3GameEngine = null;
-
 const GameMode = {
-  SINGLE: 'SINGLE',
-  TWO: 'TWO',
+  SINGLE_PLAYER: 'SINGLE_PLAYER',
+  TWO_PLAYER: 'TWO_PLAYER',
 };
 
 const AiDifficulty = {
-  DUMB: 'DUMB',
   EASY: 'EASY',
   NORMAL: 'NORMAL',
   HARD: 'HARD',
-  IMPOSSIBLE: 'IMPOSSIBLE',
 };
 
-export let appState = {
-  gameMode: GameMode.SINGLE,
+let appContext = {
+  gameMode: GameMode.SINGLE_PLAYER,
   aiDifficulty: AiDifficulty.NORMAL,
   aiPlaysAs: 'x', // 'x' or 'o'
+  engine: null,
 };
 
-export function setEngineContext(engine) {
-  t3GameEngine = engine;
-}
+export { GameMode, AiDifficulty };
+export default appContext;

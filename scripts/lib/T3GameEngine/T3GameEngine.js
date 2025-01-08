@@ -1,19 +1,16 @@
-import { checkWin } from './utils.js';
+import { evaluateWinner, validateBoardAndMatchSize } from './utils.js';
 
 const GameStatus = {
-  INITIAL: 'INITIAL',
-  PROGRESSING: 'PROGRESSING',
-  GAME_OVER: 'GAME_OVER',
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
 };
 
 export default class T3GameEngine {
   constructor(config = {}) {
     this.initializeConfig(config);
     this.state = {};
-    this.moveUndoStack = [];
-    this.moveRedoStack = [];
     this.resetState();
-    this.resetScores();
   }
 
   initializeConfig(config) {
@@ -21,10 +18,7 @@ export default class T3GameEngine {
       boardSize: config.boardSize ?? 3,
       matchSize: config.matchSize ?? (config.boardSize >= 4 ? 4 : 3),
     };
-    const { ok, message } = this.validateBoardAndMatchSize(
-      this.config.boardSize,
-      this.config.matchSize
-    );
+    const { ok, message } = validateBoardAndMatchSize(this.config.boardSize, this.config.matchSize);
     if (!ok) {
       throw new Error(message);
     }
@@ -35,72 +29,80 @@ export default class T3GameEngine {
       board: Array(this.config.boardSize * this.config.boardSize).fill(null),
       currentPlayer: 'x',
       winner: null,
-      winningCombination: null,
+      winningPattern: null,
       isGameOver: false,
-      gameStatus: GameStatus.INITIAL,
+      gameStatus: GameStatus.NOT_STARTED,
+      moveUndoStack: [],
+      moveRedoStack: [],
     });
-    this.moveUndoStack = [];
-    this.moveRedoStack = [];
-  }
-
-  resetScores(scores = { x: 0, o: 0, draw: 0 }) {
-    this.state.scores = { ...scores };
   }
 
   makeMove(index) {
     if (!this.isMoveAvailable(index)) return null;
+
+    this.state.gameStatus = GameStatus.IN_PROGRESS;
+    this.state.moveUndoStack.push({ index, player: this.state.currentPlayer });
+    this.state.moveRedoStack = [];
+
     this.state.board[index] = this.state.currentPlayer;
-    this.moveUndoStack.push({ index, player: this.state.currentPlayer });
-    this.moveRedoStack = [];
-    this.state.gameStatus = GameStatus.PROGRESSING;
-    this.handleMoveOutcome();
+    this.evaluateMoveOutcome();
     return this.state;
   }
 
+  redoMove() {
+    if (this.state.moveRedoStack.length === 0) return null;
+
+    const lastMove = this.state.moveRedoStack.pop();
+    this.state.moveUndoStack.push(lastMove);
+
+    this.state.board[lastMove.index] = lastMove.player;
+    this.evaluateMoveOutcome();
+    return lastMove;
+  }
+
   undoMove() {
-    if (this.moveUndoStack.length === 0) return null;
-    if (this.state.isGameOver) {
-      if (this.state.winner) this.state.scores[this.state.winner]--;
-      else this.state.scores.draw--;
-    }
-    const lastMove = this.moveUndoStack.pop();
-    this.moveRedoStack.push(lastMove);
+    if (this.state.moveUndoStack.length === 0) return null;
+
+    const lastMove = this.state.moveUndoStack.pop();
+    this.state.moveRedoStack.push(lastMove);
+
     this.state.board[lastMove.index] = null;
     this.state.currentPlayer = lastMove.player;
+
     this.state.isGameOver = false;
     this.state.winner = null;
-    this.state.winningCombination = null;
+    this.state.winningPattern = null;
     return lastMove;
   }
 
-  redoMove() {
-    if (this.moveRedoStack.length === 0) return null;
-    const lastMove = this.moveRedoStack.pop();
-    this.moveUndoStack.push(lastMove);
-    this.state.board[lastMove.index] = lastMove.player;
-    this.handleMoveOutcome();
-    return lastMove;
-  }
-
-  handleMoveOutcome() {
-    const winnerResult = checkWin(this.state.board, this.config.boardSize, this.config.matchSize);
-    if (winnerResult) this.setWinnerState(winnerResult);
-    else if (this.isBoardFull(this.state.board)) this.setDrawState();
-    else this.switchPlayer();
+  evaluateMoveOutcome() {
+    const winnerResult = evaluateWinner(
+      this.state.board,
+      this.config.boardSize,
+      this.config.matchSize
+    );
+    if (winnerResult) {
+      this.setWinnerState(winnerResult);
+    } else if (this.isBoardFull(this.state.board)) {
+      this.setDrawState();
+    } else {
+      this.switchPlayer();
+    }
   }
 
   setWinnerState(winnerResult) {
     this.state.winner = winnerResult.winner;
-    this.state.winningCombination = winnerResult.winningCombination;
-    this.state.isGameOver = true;
-    this.state.gameStatus = GameStatus.GAME_OVER;
-    this.state.scores[this.state.winner]++;
+    this.state.winningPattern = winnerResult.winningPattern;
+    this.setGameOverState();
   }
 
   setDrawState() {
+    this.setGameOverState();
+  }
+
+  setGameOverState() {
     this.state.isGameOver = true;
-    this.state.gameStatus = GameStatus.GAME_OVER;
-    this.state.scores.draw++;
+    this.state.gameStatus = GameStatus.COMPLETED;
   }
 
   switchPlayer() {
@@ -115,38 +117,10 @@ export default class T3GameEngine {
     return board.every(cell => cell !== null);
   }
 
-  updateBoardAndMatchSize(newBoardSize, newMatchSize) {
-    const { ok, message } = this.validateBoardAndMatchSize(newBoardSize, newMatchSize);
-    if (!ok) {
-      throw new Error(message);
-    }
-    this.config.boardSize = newBoardSize;
-    this.config.matchSize = newMatchSize;
-    this.resetState();
-  }
-
-  validateBoardAndMatchSize(boardSize, matchSize) {
-    if (boardSize < 3 || matchSize < 3) {
-      return { ok: false, message: 'Board size and match size must be at least 3.' };
-    }
-    if (matchSize > boardSize) {
-      return { ok: false, message: 'Match size cannot be greater than board size.' };
-    }
-    if (boardSize >= 4 && matchSize < 4) {
-      return {
-        ok: false,
-        message: 'For a board size of 4 or more, the match size must be at least 4.',
-      };
-    }
-    return { ok: true, message: '' };
-  }
-
   serialize() {
     return JSON.stringify({
       config: this.config,
       state: this.state,
-      moveUndoStack: this.moveUndoStack,
-      moveRedoStack: this.moveRedoStack,
     });
   }
 
@@ -154,7 +128,5 @@ export default class T3GameEngine {
     const data = JSON.parse(serializedData);
     this.config = data.config;
     this.state = data.state;
-    this.moveUndoStack = data.moveUndoStack;
-    this.moveRedoStack = data.moveRedoStack;
   }
 }
