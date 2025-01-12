@@ -1,5 +1,7 @@
 import { evaluateWinner, validateBoardAndMatchSize } from './utils.js';
 
+export { validateBoardAndMatchSize };
+
 const GameStatus = {
   NOT_STARTED: 'NOT_STARTED',
   IN_PROGRESS: 'IN_PROGRESS',

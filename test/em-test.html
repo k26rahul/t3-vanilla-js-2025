@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      /* :root,
+      html {
+        font-size: 50px;
+      } */
+
+      body {
+        margin: 0;
+      }
+
+      .box {
+        width: 500px;
+        height: 100px;
+        background: darkslateblue;
+        margin: 10px 0;
+      }
+
+      @media (max-width: 576px) {
+        .box.b1 {
+          width: 300px;
+          background: hotpink;
+        }
+      }
+
+      @media (max-width: 36rem) {
+        .box.b2 {
+          width: 300px;
+          background: hotpink;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box b1"></div>
+    <div class="box b2"></div>
+
+    <div>Hello</div>
+    <div style="font-size: 16px">Vidu</div>
+    <div
+      style="width: 10rem; height: 10rem; background: crimson; border: 0.5rem solid orange"
+    ></div>
+    <div style="width: 160px; height: 160px; background: crimson; border: 8px solid orange"></div>
+  </body>
+</html>

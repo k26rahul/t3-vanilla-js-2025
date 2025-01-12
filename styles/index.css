@@ -1,72 +1,38 @@
-@import url('./animations.css');
-
-:root {
-  --t3-grid-bg: #eee;
-  --t3-cell-bg: white;
-  --clear-score-bg: crimson;
-  --reset-board-bg: seagreen;
-  --undo-redo-bg: darkblue;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', Arial, Helvetica, sans-serif;
-}
-
-button {
-  border: none;
-  cursor: pointer;
-  user-select: none;
-  display: flex;
-  align-items: center;
-}
-
-button iconify-icon {
-  margin-right: 0.5rem;
-}
-
-select {
-  outline: none;
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-}
-
-select:focus {
-  border-color: #007bff;
-}
-
-.gradient-box-shadow {
-  background: linear-gradient(135deg, #f4f4f4, #e0e0e0);
-  box-shadow: inset 1px 1px 2px #bbb, inset -2px -2px 2px #fff, 2px 4px 4px #ccc;
-}
-
-iconify-icon {
-  display: inline-block;
-  width: 1.5em;
-  height: 1.5em;
-}
+@import 'reset.css';
+@import 'variables.css';
+@import 'base.css';
+@import 'utilities.css';
+@import 'animations.css';
 
 /* ================
 header, main
  */
 
 header {
+  padding-top: 1rem;
   text-align: center;
-  padding: 1rem 0;
 }
 
 main {
+  width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
   place-items: center;
-  padding: 0 1rem;
-  padding-bottom: 1rem;
 }
 
-main section {
+main > section {
+  margin-bottom: 2rem;
+}
+
+main > section.score-display,
+main > section.game-controls {
   margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  main {
+    width: 100%;
+  }
 }
 
 /* ================
@@ -77,7 +43,6 @@ t3 grid, cells
   display: grid;
   gap: 0.25rem;
   background-color: var(--t3-grid-bg);
-  margin-bottom: 2rem;
 }
 
 .t3-grid-3x3 {
@@ -123,11 +88,20 @@ t3 grid, cells
 .t3-cell {
   width: 100%;
   height: 100%;
+  padding: 0;
   display: grid;
   place-items: center;
   font-size: 1.5rem;
   background-color: inherit;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.t3-cell.winning {
+  font-size: 2.5rem;
+}
+
+.t3-cell:not(.filled):hover {
+  background-color: var(--t3-grid-bg);
 }
 
 .t3-cell.filled {
@@ -136,14 +110,6 @@ t3 grid, cells
 
 .t3-grid.game-over .t3-cell {
   cursor: initial;
-}
-
-.t3-cell:not(.filled):hover {
-  background-color: var(--t3-grid-bg);
-}
-
-.t3-cell.winning {
-  font-size: 2.5rem;
 }
 
 .t3-grid.game-over .t3-cell:not(.winning) {
@@ -157,9 +123,9 @@ score, status display
 .score-display {
   display: flex;
   gap: 5rem;
-  text-align: center;
   padding: 1rem;
   border-radius: 5px;
+  text-align: center;
 }
 
 .score-key {
@@ -179,7 +145,7 @@ game controls
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: 2rem 1rem;
   border-radius: 5px;
 }
 
@@ -191,18 +157,20 @@ game controls
   gap: 1rem;
 }
 
-.game-controls button {
-  padding: 0.5rem;
-  border-radius: 5px;
-  color: white;
-  box-shadow: 5px 5px 10px #979797;
-}
-
 #clear-score {
   background-color: var(--clear-score-bg);
 }
+
+#clear-score:hover {
+  background-color: var(--clear-score-bg-hover);
+}
+
 #reset-board {
   background-color: var(--reset-board-bg);
+}
+
+#reset-board:hover {
+  background-color: var(--reset-board-bg-hover);
 }
 
 #undo,
@@ -210,12 +178,23 @@ game controls
   background-color: var(--undo-redo-bg);
 }
 
+#undo:hover,
+#redo:hover {
+  background-color: var(--undo-redo-bg-hover);
+}
+
 .control-group label {
   display: block;
-  margin-bottom: 5px;
   font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .control-group select {
   min-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .control-group {
+    width: 100%;
+  }
 }

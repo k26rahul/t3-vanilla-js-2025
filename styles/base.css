@@ -1,0 +1,38 @@
+body {
+  font-family: 'Architects Daughter', Arial, Helvetica, sans-serif;
+}
+
+button {
+  display: flex;
+  align-items: center;
+  padding: 1em;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  background-color: black;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease-in-out;
+}
+
+button iconify-icon {
+  margin-right: 0.5em;
+}
+
+select {
+  padding: 1em;
+  outline: none;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+select:focus {
+  border-color: #007bff;
+}
+
+iconify-icon {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+}

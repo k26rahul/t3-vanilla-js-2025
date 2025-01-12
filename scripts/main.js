@@ -1,4 +1,4 @@
-import { initializeGameControls, initializeGame } from './gameController.js';
+import { initializeGame, initializeGameControls } from './controllers/gameController.js';
 
 initializeGame();
 initializeGameControls();

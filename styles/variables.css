@@ -1,0 +1,20 @@
+/* breakpoints
+
+  640px;
+  768px;
+  1024px;
+  1280px;
+  1536px;
+  
+ */
+
+:root {
+  --t3-grid-bg: #eee;
+  --t3-cell-bg: white;
+  --clear-score-bg: crimson;
+  --clear-score-bg-hover: darkred;
+  --reset-board-bg: seagreen;
+  --reset-board-bg-hover: darkgreen;
+  --undo-redo-bg: slateblue;
+  --undo-redo-bg-hover: darkslateblue;
+}

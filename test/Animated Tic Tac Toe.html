@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animated Tic Tac Toe</title>
+    <style>
+      .wrapper {
+        display: inline-flex;
+      }
+      .animated-text {
+        font-size: 4em;
+        animation-name: jump-custom, fall-down;
+        animation-duration: 2s, 1s;
+        animation-timing-function: ease-in-out, ease-out;
+        animation-iteration-count: 1, 1;
+        animation-fill-mode: none, forwards;
+        display: inline-block;
+      }
+      @keyframes jump-custom {
+        33% {
+          text-shadow: rgb(243, 113, 33) 0px 60px, rgb(242, 170, 170) 0px 150px;
+        }
+        50% {
+          transform: translate(0px) rotate(-4deg);
+          text-shadow: rgb(143, 192, 169) 0px 0px, rgb(132, 169, 172) 0px 0px;
+        }
+        66.67% {
+          text-shadow: rgb(213, 64, 98) 0px -60px, rgb(143, 192, 169) 0px -150px;
+        }
+      }
+      @keyframes fall-down {
+        0% {
+          transform: translateY(-100vh);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh">
+      <div class="wrapper">
+        <span class="animated-text" style="animation-delay: 0s">tic</span>
+        <span class="animated-text" style="animation-delay: 0.2s">tac</span>
+        <span class="animated-text" style="animation-delay: 0.4s">toe</span>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+.gradient-box-shadow {
+  background: linear-gradient(135deg, #ffffff, #c5c5c5);
+  box-shadow: inset -1px -1px 2px #bbb, inset 1px 1px 2px #eee;
+}
