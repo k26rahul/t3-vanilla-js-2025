@@ -1,36 +1,42 @@
-import T3GameEngine, { validateBoardAndMatchSize } from '../lib/T3GameEngine/T3GameEngine.js';
-import { applyAndRemoveAnimationClasses } from '../utils.js';
 import appContext from '../appContext.js';
+import { applyAndRemoveAnimationClasses } from '../utils.js';
+import T3GameEngine, { validateBoardAndMatchSize } from '../lib/T3GameEngine/T3GameEngine.js';
+
+export { initializeGame, initializeGameControls };
 
 const $t3Grid = document.querySelector('.t3-grid');
 const $statusDisplay = document.querySelector('.status-display');
 const $scoreX = document.querySelector('.score-value[data-score-x]');
 const $scoreO = document.querySelector('.score-value[data-score-o]');
 const $scoreDraw = document.querySelector('.score-value[data-score-draw]');
-const $selectBoardSize = document.getElementById('board-size');
-const $selectMatchSize = document.getElementById('match-size');
-const $selectGameMode = document.getElementById('game-mode');
-const $selectAiDifficulty = document.getElementById('ai-difficulty');
-const $selectAiPlaysAs = document.getElementById('ai-plays-as');
+
 const $buttonClearScore = document.getElementById('clear-score');
 const $buttonResetBoard = document.getElementById('reset-board');
 const $buttonUndo = document.getElementById('undo');
 const $buttonRedo = document.getElementById('redo');
 
-export function initializeGame() {
+const $selectBoardSize = document.getElementById('board-size');
+const $selectMatchSize = document.getElementById('match-size');
+const $selectGameMode = document.getElementById('game-mode');
+const $selectAiDifficulty = document.getElementById('ai-difficulty');
+const $selectAiPlaysAs = document.getElementById('ai-plays-as');
+
+let t3GameEngine = null;
+
+function initializeGame() {
   appContext.t3GameEngine = new T3GameEngine();
-  resetGame();
+  t3GameEngine = appContext.t3GameEngine;
+  window.t3GameEngine = t3GameEngine;
+  startNewGame();
 }
 
-export function resetGame() {
-  const { t3GameEngine } = appContext;
+function startNewGame() {
   t3GameEngine.resetState();
-  buildBoard();
   updateStatusDisplay();
+  buildBoard();
 }
 
-export function buildBoard() {
-  const { t3GameEngine } = appContext;
+function buildBoard() {
   const boardSize = t3GameEngine.config.boardSize;
   $t3Grid.innerHTML = '';
   $t3Grid.className = `t3-grid t3-grid-${boardSize}x${boardSize}`;
@@ -51,25 +57,18 @@ export function buildBoard() {
     $t3Grid.appendChild(cellWrapper);
   }
 
-  document.querySelectorAll('.t3-cell').forEach(cell => {
-    cell.addEventListener('click', handleCellClick);
+  document.querySelectorAll('.t3-cell').forEach((cell, index) => {
+    cell.addEventListener('click', () => makeMove(index, cell));
   });
 }
 
-export function handleCellClick(event) {
-  const { t3GameEngine } = appContext;
-  const index = parseInt(event.target.getAttribute('data-cell'));
+function makeMove(index, cell) {
   if (!t3GameEngine.isMoveAvailable(index)) {
     if (t3GameEngine.state.isGameOver) {
-      resetGame();
+      startNewGame();
     }
     return;
   }
-  makeMove(index, event.target);
-}
-
-function makeMove(index, cell) {
-  const { t3GameEngine } = appContext;
   const currentPlayer = t3GameEngine.state.currentPlayer;
   t3GameEngine.makeMove(index);
   fillCell(cell, currentPlayer);
@@ -77,18 +76,26 @@ function makeMove(index, cell) {
   handleGameOver();
 }
 
-function undoMove(index) {
-  const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
-  unfillCell(cell);
-  updateStatusDisplay();
-  handleUndoGameOver();
+function redoMove() {
+  const lastMove = t3GameEngine.redoMove();
+  if (lastMove) {
+    const cell = document.querySelector(`.t3-cell[data-cell="${lastMove.index}"]`);
+    fillCell(cell, lastMove.player);
+    updateStatusDisplay();
+    handleGameOver();
+  }
 }
 
-function redoMove(index, player) {
-  const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
-  fillCell(cell, player);
-  updateStatusDisplay();
-  handleGameOver();
+function undoMove() {
+  const wasGameOver = t3GameEngine.state.isGameOver;
+  const lastMove = t3GameEngine.undoMove();
+  if (lastMove) {
+    const cell = document.querySelector(`.t3-cell[data-cell="${lastMove.index}"]`);
+    unfillCell(cell);
+    updateStatusDisplay();
+    handleUndoGameOver();
+    if (wasGameOver) updateScoresDisplay();
+  }
 }
 
 function fillCell(cell, player) {
@@ -106,26 +113,14 @@ function unfillCell(cell) {
   });
 }
 
-export function updateStatusDisplay() {
-  const { t3GameEngine } = appContext;
-  const state = t3GameEngine.state;
-  if (state.isGameOver) {
-    $statusDisplay.textContent = state.winner
-      ? `${getPlayerSymbol(state.winner)} Wins!`
-      : "It's a Draw!";
-  } else {
-    $statusDisplay.textContent = `${getPlayerSymbol(state.currentPlayer)}'s Turn`;
-  }
-}
-
 function handleGameOver() {
-  const { t3GameEngine } = appContext;
   const { isGameOver, winner, winningPattern } = t3GameEngine.state;
   if (isGameOver) {
     if (winner) {
       winningPattern.forEach(index => {
         const cell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
         cell.classList.add('winning');
+
         const span = cell.querySelector('span');
         applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
       });
@@ -136,7 +131,6 @@ function handleGameOver() {
 }
 
 function handleUndoGameOver() {
-  const { t3GameEngine } = appContext;
   if (!t3GameEngine.state.isGameOver) {
     $t3Grid.classList.remove('game-over');
     document.querySelectorAll('.winning').forEach(cell => {
@@ -149,120 +143,103 @@ function handleUndoGameOver() {
   }
 }
 
-function updateScoresDisplay() {
-  const { t3GameEngine } = appContext;
+function updateStatusDisplay() {
   const state = t3GameEngine.state;
-  $scoreX.textContent = state.scores.x || '_';
-  $scoreO.textContent = state.scores.o || '_';
-  $scoreDraw.textContent = state.scores.draw || '_';
+  if (state.isGameOver) {
+    $statusDisplay.textContent = state.winner
+      ? `${getPlayerSymbol(state.winner)} Wins!`
+      : "It's a Draw!";
+  } else {
+    $statusDisplay.textContent = `${getPlayerSymbol(state.currentPlayer)}'s Turn`;
+  }
 }
 
-export function getPlayerSymbol(player) {
+function updateScoresDisplay() {
+  $scoreX.textContent = t3GameEngine.scores.x || '_';
+  $scoreO.textContent = t3GameEngine.scores.o || '_';
+  $scoreDraw.textContent = t3GameEngine.scores.draw || '_';
+}
+
+function getPlayerSymbol(player) {
   return player === 'x' ? '✖️' : '⭕';
 }
 
-export function initializeGameControls() {
-  const { t3GameEngine } = appContext;
-  updateMatchSizeOptions(t3GameEngine.config.boardSize);
+function initializeGameControls() {
+  updateMatchSizeOptionsAndConfigureEngine(t3GameEngine.config.boardSize);
 
-  $selectBoardSize.addEventListener('change', handleBoardSizeChange);
-  $selectMatchSize.addEventListener('change', handleMatchSizeChange);
-  $selectGameMode.addEventListener('change', handleGameModeChange);
-  $selectAiDifficulty.addEventListener('change', handleAiDifficultyChange);
-  $selectAiPlaysAs.addEventListener('change', handleAiPlaysAsChange);
-  $buttonClearScore.addEventListener('click', handleClearScoreClick);
-  $buttonResetBoard.addEventListener('click', handleResetBoardClick);
-  $buttonUndo.addEventListener('click', handleUndoClick);
-  $buttonRedo.addEventListener('click', handleRedoClick);
+  $buttonClearScore.addEventListener('click', () => clearScore());
+  $buttonResetBoard.addEventListener('click', () => resetBoard());
+  $buttonUndo.addEventListener('click', () => undoMove());
+  $buttonRedo.addEventListener('click', () => redoMove());
+
+  $selectBoardSize.addEventListener('change', event =>
+    changeBoardSize(parseInt(event.target.value))
+  );
+  $selectMatchSize.addEventListener('change', event =>
+    changeMatchSize(parseInt(event.target.value))
+  );
+
+  $selectGameMode.addEventListener('change', event => changeGameMode(event.target.value));
+  $selectAiDifficulty.addEventListener('change', event => changeAiDifficulty(event.target.value));
+  $selectAiPlaysAs.addEventListener('change', event => changeAiPlaysAs(event.target.value));
 }
 
-export function handleBoardSizeChange(event) {
-  const { t3GameEngine } = appContext;
-  if (
-    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
+function confirmResetGame() {
+  return (
+    t3GameEngine.state.gameStatus === 'IN_PROGRESS' &&
     !confirm('Are you sure you want to reset the game?')
-  ) {
-    return;
-  }
-  const boardSize = parseInt(event.target.value);
-  updateMatchSizeOptions(boardSize);
-  resetGame();
+  );
 }
 
-export function handleMatchSizeChange(event) {
-  const { t3GameEngine } = appContext;
-  if (
-    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
-    !confirm('Are you sure you want to reset the game?')
-  ) {
-    return;
-  }
-  const matchSize = parseInt(event.target.value);
-  t3GameEngine.updateBoardAndMatchSize(t3GameEngine.config.boardSize, matchSize);
-  resetGame();
-}
-
-export function handleGameModeChange(event) {
-  const { t3GameEngine } = appContext;
-  if (
-    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
-    !confirm('Are you sure you want to reset the game?')
-  ) {
-    return;
-  }
-  appState.gameMode = event.target.value;
-  resetGame();
-}
-
-export function handleAiDifficultyChange(event) {
-  appState.aiDifficulty = event.target.value;
-}
-
-export function handleAiPlaysAsChange(event) {
-  appState.aiPlaysAs = event.target.value;
-}
-
-export function handleClearScoreClick() {
-  const { t3GameEngine } = appContext;
+function clearScore() {
   if (confirm('Are you sure you want to reset the scores?')) {
     t3GameEngine.resetScores();
     updateScoresDisplay();
   }
 }
 
-export function handleResetBoardClick() {
-  const { t3GameEngine } = appContext;
-  if (
-    t3GameEngine.state.gameStatus === 'PROGRESSING' &&
-    !confirm('Are you sure you want to reset the game?')
-  ) {
+function resetBoard() {
+  if (confirmResetGame()) {
     return;
   }
-  resetGame();
+  startNewGame();
 }
 
-export function handleUndoClick() {
-  const { t3GameEngine } = appContext;
-  const wasGameOver = t3GameEngine.state.isGameOver;
-  const lastMove = t3GameEngine.undoMove();
-  if (lastMove) {
-    undoMove(lastMove.index);
-    if (wasGameOver) {
-      updateScoresDisplay();
-    }
+function changeBoardSize(boardSize) {
+  if (confirmResetGame()) {
+    return;
   }
+  updateMatchSizeOptionsAndConfigureEngine(boardSize);
+  startNewGame();
 }
 
-export function handleRedoClick() {
-  const { t3GameEngine } = appContext;
-  const lastMove = t3GameEngine.redoMove();
-  if (lastMove) {
-    redoMove(lastMove.index, lastMove.player);
+function changeMatchSize(matchSize) {
+  if (confirmResetGame()) {
+    return;
   }
+  t3GameEngine.updateConfigAndResetState({ matchSize });
+  startNewGame();
 }
 
-function updateMatchSizeOptions(boardSize) {
+function changeGameMode(gameMode) {
+  if (confirmResetGame()) {
+    return;
+  }
+  appState.gameMode = gameMode;
+  startNewGame();
+}
+
+function changeAiDifficulty(difficulty) {
+  appState.aiDifficulty = difficulty;
+}
+
+function changeAiPlaysAs(playsAs) {
+  appState.aiPlaysAs = playsAs;
+}
+
+function updateMatchSizeOptionsAndConfigureEngine(boardSize) {
   const options = $selectMatchSize.querySelectorAll('option');
+  let matchSize = null;
   let firstEnabledOption = null;
   let currentSelectedOption = null;
 
@@ -277,8 +254,13 @@ function updateMatchSizeOptions(boardSize) {
 
   if (currentSelectedOption.disabled) {
     firstEnabledOption.selected = true;
-    appContext.matchSize = parseInt(firstEnabledOption.value);
+    matchSize = parseInt(firstEnabledOption.value);
   } else {
-    appContext.matchSize = parseInt(currentSelectedOption.value);
+    matchSize = parseInt(currentSelectedOption.value);
   }
+
+  t3GameEngine.updateConfigAndResetState({
+    boardSize,
+    matchSize: matchSize,
+  });
 }

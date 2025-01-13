@@ -71,14 +71,14 @@ export function generateWinningPatterns(boardSize, matchSize) {
   return patterns;
 }
 
-export function validateBoardAndMatchSize(boardSize, matchSize) {
+export function validateBoardAndMatchSize(boardSize, matchSize, strictRules = true) {
   if (boardSize < 3 || matchSize < 3) {
     return { ok: false, message: 'Board size and match size must be at least 3.' };
   }
   if (matchSize > boardSize) {
     return { ok: false, message: 'Match size cannot be greater than board size.' };
   }
-  if (boardSize >= 4 && matchSize < 4) {
+  if (strictRules && boardSize >= 4 && matchSize < 4) {
     return {
       ok: false,
       message: 'For a board size of 4 or more, the match size must be at least 4.',

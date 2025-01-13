@@ -10,20 +10,31 @@ const GameStatus = {
 
 export default class T3GameEngine {
   constructor(config = {}) {
-    this.initializeConfig(config);
+    this.validateAndSetConfig(config);
     this.state = {};
+    this.scores = { x: 0, o: 0, draw: 0 };
     this.resetState();
   }
 
-  initializeConfig(config) {
-    this.config = {
+  validateAndSetConfig(config) {
+    const newConfig = {
       boardSize: config.boardSize ?? 3,
       matchSize: config.matchSize ?? (config.boardSize >= 4 ? 4 : 3),
     };
-    const { ok, message } = validateBoardAndMatchSize(this.config.boardSize, this.config.matchSize);
+    const { ok, message } = validateBoardAndMatchSize(newConfig.boardSize, newConfig.matchSize);
     if (!ok) {
       throw new Error(message);
     }
+    this.config = newConfig;
+  }
+
+  updateConfigAndResetState(newConfig) {
+    const updatedConfig = {
+      ...this.config,
+      ...newConfig,
+    };
+    this.validateAndSetConfig(updatedConfig);
+    this.resetState();
   }
 
   resetState() {
@@ -71,9 +82,24 @@ export default class T3GameEngine {
     this.state.board[lastMove.index] = null;
     this.state.currentPlayer = lastMove.player;
 
+    if (this.state.gameStatus === GameStatus.COMPLETED) {
+      if (this.state.winner) {
+        // decrement scores only if they are above zero when undoing a final move (cause resetScores)
+        if (this.scores[this.state.winner] > 0) {
+          this.scores[this.state.winner] -= 1;
+        }
+      } else {
+        if (this.scores.draw > 0) {
+          this.scores.draw -= 1;
+        }
+      }
+    }
+
     this.state.isGameOver = false;
     this.state.winner = null;
     this.state.winningPattern = null;
+
+    this.state.gameStatus = GameStatus.IN_PROGRESS;
     return lastMove;
   }
 
@@ -85,8 +111,10 @@ export default class T3GameEngine {
     );
     if (winnerResult) {
       this.setWinnerState(winnerResult);
+      this.scores[winnerResult.winner] += 1;
     } else if (this.isBoardFull(this.state.board)) {
       this.setDrawState();
+      this.scores.draw += 1;
     } else {
       this.switchPlayer();
     }
@@ -123,6 +151,7 @@ export default class T3GameEngine {
     return JSON.stringify({
       config: this.config,
       state: this.state,
+      scores: this.scores,
     });
   }
 
@@ -130,5 +159,10 @@ export default class T3GameEngine {
     const data = JSON.parse(serializedData);
     this.config = data.config;
     this.state = data.state;
+    this.scores = data.scores;
+  }
+
+  resetScores(newScores = { x: 0, o: 0, draw: 0 }) {
+    this.scores = { ...newScores };
   }
 }

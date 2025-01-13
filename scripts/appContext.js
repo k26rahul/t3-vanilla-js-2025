@@ -10,14 +10,7 @@ const AiDifficulty = {
 };
 
 let appContext = {
-  boardSize: 3,
-  matchSize: 3,
   t3GameEngine: null,
-  scores: {
-    x: 0,
-    o: 0,
-    draw: 0,
-  },
   gameMode: GameMode.SINGLE_PLAYER,
   aiDifficulty: AiDifficulty.NORMAL,
   aiPlaysAs: 'x', // 'x' or 'o'

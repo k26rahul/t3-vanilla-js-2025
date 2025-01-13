@@ -12,7 +12,7 @@ button {
   background-color: black;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
 button iconify-icon {
@@ -24,7 +24,7 @@ select {
   outline: none;
   border: 2px solid #ccc;
   border-radius: 5px;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
 select:focus {
