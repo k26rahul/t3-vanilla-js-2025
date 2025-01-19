@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Autour+One&display=swap"
       rel="stylesheet"
     />
     <script type="module" src="./scripts/main.js"></script>
@@ -133,26 +133,26 @@
           <label for="game-mode">Game Mode:</label>
           <select id="game-mode">
             <option value="single">Single Player (vs AI)</option>
-            <option value="two">Two Player</option>
+            <option value="two" selected>Two Player</option>
             <option value="online-random">Online (vs Random Player)</option>
             <option value="online-friend">Online (vs Friend)</option>
           </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group disabled">
           <label for="ai-difficulty">AI Difficulty:</label>
-          <select id="ai-difficulty">
+          <select id="ai-difficulty" disabled>
             <option value="easy">Easy</option>
             <option value="normal" selected>Normal</option>
             <option value="hard">Hard</option>
           </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group disabled">
           <label for="ai-plays-as">AI Plays As:</label>
-          <select id="ai-plays-as">
+          <select id="ai-plays-as" disabled>
             <option value="x">X</option>
-            <option value="o">O</option>
+            <option value="o" selected>O</option>
           </select>
         </div>
       </section>

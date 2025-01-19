@@ -97,6 +97,7 @@ t3 grid, cells
   place-items: center;
   font-size: 1.5rem;
   background-color: inherit;
+  border-radius: 0;
   transition: background-color 0.2s ease-in-out;
 }
 
@@ -195,6 +196,15 @@ game controls
 
 .control-group select {
   min-width: 100%;
+}
+
+.control-group.disabled label {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.control-group.disabled select {
+  cursor: not-allowed;
 }
 
 @media (max-width: 640px) {

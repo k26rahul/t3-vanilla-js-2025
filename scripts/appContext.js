@@ -18,3 +18,4 @@ let appContext = {
 
 export { GameMode, AiDifficulty };
 export default appContext;
+window.appContext = appContext; // debug

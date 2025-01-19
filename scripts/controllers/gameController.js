@@ -26,7 +26,6 @@ let t3GameEngine = null;
 function initializeGame() {
   appContext.t3GameEngine = new T3GameEngine();
   t3GameEngine = appContext.t3GameEngine;
-  window.t3GameEngine = t3GameEngine;
   startNewGame();
 }
 
@@ -38,8 +37,9 @@ function startNewGame() {
 
 function buildBoard() {
   const boardSize = t3GameEngine.config.boardSize;
+
   $t3Grid.innerHTML = '';
-  $t3Grid.className = `t3-grid t3-grid-${boardSize}x${boardSize}`;
+  $t3Grid.className = `t3-grid t3-grid-${boardSize}x${boardSize} animated bounceIn`;
 
   const totalCells = boardSize * boardSize;
   for (let i = 0; i < totalCells; i++) {
@@ -87,14 +87,12 @@ function redoMove() {
 }
 
 function undoMove() {
-  const wasGameOver = t3GameEngine.state.isGameOver;
   const lastMove = t3GameEngine.undoMove();
   if (lastMove) {
     const cell = document.querySelector(`.t3-cell[data-cell="${lastMove.index}"]`);
     unfillCell(cell);
     updateStatusDisplay();
     handleUndoGameOver();
-    if (wasGameOver) updateScoresDisplay();
   }
 }
 
@@ -140,6 +138,7 @@ function handleUndoGameOver() {
         applyAndRemoveAnimationClasses(span, ['animated', 'bounceIn']);
       });
     });
+    updateScoresDisplay();
   }
 }
 
