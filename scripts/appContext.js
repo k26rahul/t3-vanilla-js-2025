@@ -13,7 +13,7 @@ let appContext = {
   t3GameEngine: null,
   gameMode: GameMode.SINGLE_PLAYER,
   aiDifficulty: AiDifficulty.NORMAL,
-  aiPlaysAs: 'x', // 'x' or 'o'
+  aiPlaysAs: 'o', // 'x' or 'o'
 };
 
 export { GameMode, AiDifficulty };

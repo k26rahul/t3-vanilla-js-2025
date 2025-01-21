@@ -1,6 +1,6 @@
 import { evaluateWinner, validateBoardAndMatchSize } from './utils.js';
 
-export { validateBoardAndMatchSize };
+export { validateBoardAndMatchSize, GameStatus };
 
 const GameStatus = {
   NOT_STARTED: 'NOT_STARTED',
@@ -10,30 +10,30 @@ const GameStatus = {
 
 export default class T3GameEngine {
   constructor(config = {}) {
+    this.config = {};
     this.validateAndSetConfig(config);
+
     this.state = {};
-    this.scores = { x: 0, o: 0, draw: 0 };
     this.resetState();
+
+    this.scores = {};
+    this.resetScores();
   }
 
-  validateAndSetConfig(config) {
-    const newConfig = {
-      boardSize: config.boardSize ?? 3,
-      matchSize: config.matchSize ?? (config.boardSize >= 4 ? 4 : 3),
-    };
-    const { ok, message } = validateBoardAndMatchSize(newConfig.boardSize, newConfig.matchSize);
-    if (!ok) {
-      throw new Error(message);
-    }
-    this.config = newConfig;
+  validateAndSetConfig(newConfig) {
+    newConfig = { ...this.config, ...newConfig };
+    const boardSize = newConfig.boardSize ?? 3;
+    const matchSize = newConfig.matchSize ?? (boardSize >= 4 ? 4 : 3);
+    const { ok, message } = validateBoardAndMatchSize(boardSize, matchSize);
+    if (!ok) throw new Error(message);
+    Object.assign(this.config, {
+      boardSize,
+      matchSize,
+    });
   }
 
   updateConfigAndResetState(newConfig) {
-    const updatedConfig = {
-      ...this.config,
-      ...newConfig,
-    };
-    this.validateAndSetConfig(updatedConfig);
+    this.validateAndSetConfig(newConfig);
     this.resetState();
   }
 
@@ -43,23 +43,46 @@ export default class T3GameEngine {
       currentPlayer: 'x',
       winner: null,
       winningPattern: null,
-      isGameOver: false,
       gameStatus: GameStatus.NOT_STARTED,
       moveUndoStack: [],
       moveRedoStack: [],
+      get isGameOver() {
+        return this.gameStatus === GameStatus.COMPLETED;
+      },
     });
+  }
+
+  resetScores() {
+    Object.assign(this.scores, {
+      x: 0,
+      o: 0,
+      draw: 0,
+    });
+  }
+
+  makeAiMove() {
+    const aiIndex = this.getAiMove();
+    if (aiIndex === null) return null;
+    return this.makeMove(aiIndex);
+  }
+
+  getAiMove() {
+    const availableMoves = this.getAvailableMoves();
+    if (availableMoves.length === 0) return null;
+    return availableMoves[0];
   }
 
   makeMove(index) {
     if (!this.isMoveAvailable(index)) return null;
-
     this.state.gameStatus = GameStatus.IN_PROGRESS;
-    this.state.moveUndoStack.push({ index, player: this.state.currentPlayer });
+
+    const lastMove = { index, player: this.state.currentPlayer };
+    this.state.moveUndoStack.push(lastMove);
     this.state.moveRedoStack = [];
 
     this.state.board[index] = this.state.currentPlayer;
     this.evaluateMoveOutcome();
-    return this.state;
+    return lastMove;
   }
 
   redoMove() {
@@ -81,26 +104,17 @@ export default class T3GameEngine {
 
     this.state.board[lastMove.index] = null;
     this.state.currentPlayer = lastMove.player;
+    this.undoGameOverIfNeeded();
+    return lastMove;
+  }
 
-    if (this.state.gameStatus === GameStatus.COMPLETED) {
-      if (this.state.winner) {
-        // decrement scores only if they are above zero when undoing a final move (cause resetScores)
-        if (this.scores[this.state.winner] > 0) {
-          this.scores[this.state.winner] -= 1;
-        }
-      } else {
-        if (this.scores.draw > 0) {
-          this.scores.draw -= 1;
-        }
-      }
-    }
-
-    this.state.isGameOver = false;
+  undoGameOverIfNeeded() {
+    if (this.state.gameStatus !== GameStatus.COMPLETED) return;
+    const scoreKey = this.state.winner ? this.state.winner : 'draw';
+    if (this.scores[scoreKey] > 0) this.scores[scoreKey] -= 1;
     this.state.winner = null;
     this.state.winningPattern = null;
-
     this.state.gameStatus = GameStatus.IN_PROGRESS;
-    return lastMove;
   }
 
   evaluateMoveOutcome() {
@@ -123,15 +137,10 @@ export default class T3GameEngine {
   setWinnerState(winnerResult) {
     this.state.winner = winnerResult.winner;
     this.state.winningPattern = winnerResult.winningPattern;
-    this.setGameOverState();
+    this.state.gameStatus = GameStatus.COMPLETED;
   }
 
   setDrawState() {
-    this.setGameOverState();
-  }
-
-  setGameOverState() {
-    this.state.isGameOver = true;
     this.state.gameStatus = GameStatus.COMPLETED;
   }
 
@@ -139,12 +148,19 @@ export default class T3GameEngine {
     this.state.currentPlayer = this.state.currentPlayer === 'x' ? 'o' : 'x';
   }
 
+  isBoardFull(board) {
+    return board.every(cell => cell !== null);
+  }
+
   isMoveAvailable(index) {
     return !this.state.isGameOver && this.state.board[index] === null;
   }
 
-  isBoardFull(board) {
-    return board.every(cell => cell !== null);
+  getAvailableMoves() {
+    return this.state.board.reduce((acc, cell, idx) => {
+      if (cell === null) acc.push(idx);
+      return acc;
+    }, []);
   }
 
   serialize() {
@@ -160,9 +176,5 @@ export default class T3GameEngine {
     this.config = data.config;
     this.state = data.state;
     this.scores = data.scores;
-  }
-
-  resetScores(newScores = { x: 0, o: 0, draw: 0 }) {
-    this.scores = { ...newScores };
   }
 }

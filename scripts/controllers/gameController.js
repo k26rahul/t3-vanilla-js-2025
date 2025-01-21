@@ -1,4 +1,4 @@
-import appContext from '../appContext.js';
+import appContext, { GameMode, AiDifficulty } from '../appContext.js';
 import { applyAndRemoveAnimationClasses } from '../utils.js';
 import T3GameEngine, { validateBoardAndMatchSize } from '../lib/T3GameEngine/T3GameEngine.js';
 
@@ -58,20 +58,38 @@ function buildBoard() {
   }
 
   document.querySelectorAll('.t3-cell').forEach((cell, index) => {
-    cell.addEventListener('click', () => makeMove(index, cell));
+    cell.addEventListener('click', () => {
+      handleCellClick(index, cell);
+    });
   });
 }
 
-function makeMove(index, cell) {
+function handleCellClick(index, cell) {
   if (!t3GameEngine.isMoveAvailable(index)) {
     if (t3GameEngine.state.isGameOver) {
       startNewGame();
     }
     return;
   }
-  const currentPlayer = t3GameEngine.state.currentPlayer;
-  t3GameEngine.makeMove(index);
-  fillCell(cell, currentPlayer);
+
+  const { player } = t3GameEngine.makeMove(index);
+  makeMove(cell, player);
+
+  if (
+    appContext.gameMode === GameMode.SINGLE_PLAYER &&
+    !t3GameEngine.state.isGameOver &&
+    t3GameEngine.state.currentPlayer === appContext.aiPlaysAs
+  ) {
+    const { index, player } = t3GameEngine.makeAiMove();
+    if (index !== null) {
+      const aiCell = document.querySelector(`.t3-cell[data-cell="${index}"]`);
+      makeMove(aiCell, player);
+    }
+  }
+}
+
+function makeMove(cell, player) {
+  fillCell(cell, player);
   updateStatusDisplay();
   handleGameOver();
 }
@@ -80,9 +98,7 @@ function redoMove() {
   const lastMove = t3GameEngine.redoMove();
   if (lastMove) {
     const cell = document.querySelector(`.t3-cell[data-cell="${lastMove.index}"]`);
-    fillCell(cell, lastMove.player);
-    updateStatusDisplay();
-    handleGameOver();
+    makeMove(cell, lastMove.player);
   }
 }
 
